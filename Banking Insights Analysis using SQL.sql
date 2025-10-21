@@ -31,7 +31,7 @@ GROUP BY Gender,CASE
 	ELSE 'Failed' 
 END
 
--------------------------------Active customers — customers who haven’t transacted in More than 12 Months------------------------------
+-------------------------------Active customers â€” customers who havenâ€™t transacted in More than 12 Months------------------------------
 SELECT a.Customerid,Concat(firstname, ' ', LastName)Customer_Name,Email,PhoneNumber, Max(Transactiondate) Last_Tran_Date
 FROM TransactionHistory a
 LEFT JOIN customers b ON a.CustomerID = b.CustomerID
@@ -146,12 +146,8 @@ WITH MonthlyData AS (
         MonthNumber,
         Total_Transactions,
         Total_Amount,
-
-        -- MoM Growth in Transactions
         LAG(Total_Transactions) OVER (ORDER BY MonthNumber) AS Prev_Transactions,
         LAG(Total_Amount) OVER (ORDER BY MonthNumber) AS Prev_Amount,
-
-        -- 3-month moving averages
         AVG(Total_Transactions) OVER (ORDER BY MonthNumber ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS MovingAvg_Transactions,
         AVG(Total_Amount) OVER (ORDER BY MonthNumber ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS MovingAvg_Amount
     FROM MonthlyTotals
@@ -161,25 +157,18 @@ SELECT
     MonthName,
     Total_Transactions,
     Total_Amount,
-
-    -- MoM Growth (%)
     CASE 
         WHEN Prev_Transactions IS NULL THEN NULL
         WHEN Prev_Transactions = 0 THEN NULL
         ELSE ROUND(((Total_Transactions - Prev_Transactions) * 100.0 / Prev_Transactions), 2)
     END AS Transaction_GrowthRate,
-
     CASE 
         WHEN Prev_Amount IS NULL THEN NULL
         WHEN Prev_Amount = 0 THEN NULL
         ELSE ROUND(((Total_Amount - Prev_Amount) * 100.0 / Prev_Amount), 2)
     END AS Amount_GrowthRate,
-
-    -- 3-Month Moving Average
     ROUND(MovingAvg_Transactions, 2) AS MovingAvg_Transactions,
     ROUND(MovingAvg_Amount, 2) AS MovingAvg_Amount,
-
-    -- Detect decline flag (current < moving average)
     CASE 
         WHEN Total_Transactions < MovingAvg_Transactions THEN 'Decline'
         ELSE 'Stable/Increase'
@@ -273,6 +262,7 @@ FROM TransactionHistory a
 JOIN Accounts b ON a.CustomerID = b.CustomerID
 GROUP BY BusinessSegment
 ORDER BY TotalAmount DESC
+
 
 
 
